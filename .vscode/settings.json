@@ -11,6 +11,7 @@
         "variant": "c",
         "compare": "c",
         "cstdint": "c",
-        "format": "c"
+        "format": "c",
+        "random": "c"
     }
 }

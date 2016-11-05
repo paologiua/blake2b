@@ -14,8 +14,7 @@
  * @params  a, b, c, d  indices to 8-byte word entries from the work vector V
  * @params  x, y        two 8-byte word entries from padded message v
  */
-static void
-G(uint64_t v[16], int a, int b, int c, int d, int64_t x, int64_t y)
+static void G(uint64_t v[16], int a, int b, int c, int d, int64_t x, int64_t y)
 {
 	v[a] = v[a] + v[b] + x;
 	v[d] = rotr64(v[d] ^ v[a], 32);
@@ -37,48 +36,38 @@ G(uint64_t v[16], int a, int b, int c, int d, int64_t x, int64_t y)
  * @param      ctx    blake2b_ctx instance
  * @param      block  The input block
  */
-static void
-F(blake2b_ctx *ctx, uint8_t block[BLAKE2B_BLOCKBYTES])
+static void blake2b_compress(blake2b_ctx *ctx, int last)
 {
-	size_t i, j;
-	uint64_t v[16], m[16], s[16];
+	uint64_t v[16], m[16];
 
-	for (i = 0; i < 16; ++i)
-	{
-		m[i] = load64(block + i * sizeof(m[i]));
-	}
-
-	for (i = 0; i < 8; ++i)
-	{
+	for (size_t i = 0; i < 8; i++)
+	{ // init work variables
 		v[i] = ctx->h[i];
 		v[i + 8] = blake2b_iv[i];
 	}
 
-	v[12] ^= ctx->t[0];
-	v[13] ^= ctx->t[1];
-	v[14] ^= ctx->f[0];
-	v[15] ^= ctx->f[1];
+	v[12] ^= ctx->t[0]; // low 64 bits of offset
+	v[13] ^= ctx->t[1]; // high 64 bits
+	if (last)						// last block flag set ?
+		v[14] = ~v[14];
 
-	for (i = 0; i < 12; i++)
-	{
-		for (j = 0; j < 16; j++)
-		{
-			s[j] = blake2b_sigma[i][j];
-		}
-		G(v, 0, 4, 8, 12, m[s[0]], m[s[1]]);
-		G(v, 1, 5, 9, 13, m[s[2]], m[s[3]]);
-		G(v, 2, 6, 10, 14, m[s[4]], m[s[5]]);
-		G(v, 3, 7, 11, 15, m[s[6]], m[s[7]]);
-		G(v, 0, 5, 10, 15, m[s[8]], m[s[9]]);
-		G(v, 1, 6, 11, 12, m[s[10]], m[s[11]]);
-		G(v, 2, 7, 8, 13, m[s[12]], m[s[13]]);
-		G(v, 3, 4, 9, 14, m[s[14]], m[s[15]]);
+	for (size_t i = 0; i < 16; i++) // get little-endian words
+		m[i] = load64(&ctx->b[8 * i]);
+
+	for (size_t i = 0; i < 12; i++)
+	{ // twelve rounds
+		G(v, 0, 4, 8, 12, m[blake2b_sigma[i][0]], m[blake2b_sigma[i][1]]);
+		G(v, 1, 5, 9, 13, m[blake2b_sigma[i][2]], m[blake2b_sigma[i][3]]);
+		G(v, 2, 6, 10, 14, m[blake2b_sigma[i][4]], m[blake2b_sigma[i][5]]);
+		G(v, 3, 7, 11, 15, m[blake2b_sigma[i][6]], m[blake2b_sigma[i][7]]);
+		G(v, 0, 5, 10, 15, m[blake2b_sigma[i][8]], m[blake2b_sigma[i][9]]);
+		G(v, 1, 6, 11, 12, m[blake2b_sigma[i][10]], m[blake2b_sigma[i][11]]);
+		G(v, 2, 7, 8, 13, m[blake2b_sigma[i][12]], m[blake2b_sigma[i][13]]);
+		G(v, 3, 4, 9, 14, m[blake2b_sigma[i][14]], m[blake2b_sigma[i][15]]);
 	}
 
-	for (i = 0; i < 8; i++)
-	{
-		ctx->h[i] = ctx->h[i] ^ v[i] ^ v[i + 8];
-	}
+	for (size_t i = 0; i < 8; ++i)
+		ctx->h[i] ^= v[i] ^ v[i + 8];
 }
 
 /**
@@ -93,12 +82,21 @@ F(blake2b_ctx *ctx, uint8_t block[BLAKE2B_BLOCKBYTES])
  */
 int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key, size_t keylen)
 {
-	if (outlen == 0 || outlen > 64 || keylen > 64)
+	if (outlen == 0 || outlen > BLAKE2B_OUTBYTES)
 		return -1; // illegal parameters
+
+	if (keylen > BLAKE2B_KEYBYTES)
+		return -1; // illegal parameters
+
+	memset(ctx->b, 0, sizeof(ctx->b));
+	ctx->t[0] = 0; // input count low word
+	ctx->t[1] = 0; // input count high word
+	ctx->c = 0;		 // pointer within buffer
+	ctx->outlen = outlen;
 
 	blake2b_param P;
 	P.digest_length = (uint8_t)outlen;
-	P.key_length = 0;
+	P.key_length = (uint8_t)keylen;
 	P.fanout = 1;
 	P.depth = 1;
 	store32(&P.leaf_length, 0);
@@ -114,11 +112,11 @@ int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key, size_t keylen
 		ctx->h[i] = blake2b_iv[i];
 	for (size_t i = 0; i < 8; i++)
 		ctx->h[i] ^= load64(p + sizeof(ctx->h[i]) * i);
-	ctx->outlen = P.digest_length;
 
 	if (keylen > 0)
 	{
 		blake2b_update(ctx, key, keylen);
+		ctx->c = BLAKE2B_BLOCKBYTES; // at the end
 	}
 
 	return 0;
@@ -135,17 +133,18 @@ int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key, size_t keylen
  */
 int blake2b_update(blake2b_ctx *ctx, const void *input, size_t inlen)
 {
-	uint8_t *in = (uint8_t *)input;
-
-	while (inlen > BLAKE2B_BLOCKBYTES)
+	for (size_t i = 0; i < inlen; i++)
 	{
-		blake2b_increment_counter(ctx, BLAKE2B_BLOCKBYTES);
-		F(ctx, in);
-		in += BLAKE2B_BLOCKBYTES;
-		inlen -= BLAKE2B_BLOCKBYTES;
+		if (ctx->c == BLAKE2B_BLOCKBYTES)
+		{														// buffer full ?
+			ctx->t[0] += ctx->c;			// add counters
+			if (ctx->t[0] < ctx->c)		// carry overflow ?
+				ctx->t[1]++;						// high word
+			blake2b_compress(ctx, 0); // compress (not last)
+			ctx->c = 0;								// counter to zero
+		}
+		ctx->b[ctx->c++] = ((const uint8_t *)input)[i];
 	}
-	memcpy(ctx->buf + ctx->buflen, in, inlen);
-	ctx->buflen += inlen;
 
 	return 0;
 }
@@ -162,22 +161,19 @@ int blake2b_update(blake2b_ctx *ctx, const void *input, size_t inlen)
  */
 int blake2b_final(blake2b_ctx *ctx, void *output, size_t outlen)
 {
-	uint8_t buffer[BLAKE2B_OUTBYTES] = {0};
-	size_t i;
+	ctx->t[0] += ctx->c;		// mark last block offset
+	if (ctx->t[0] < ctx->c) // carry overflow
+		ctx->t[1]++;					// high word
 
-	blake2b_increment_counter(ctx, ctx->buflen);
-	// set last chunk = true
-	ctx->f[0] = (uint64_t)-1;
-	// padding
-	memset(ctx->buf + ctx->buflen, 0, BLAKE2B_BLOCKBYTES - ctx->buflen);
-	F(ctx, ctx->buf);
+	while (ctx->c < BLAKE2B_BLOCKBYTES) // fill up with zeros
+		ctx->b[ctx->c++] = 0;
+	blake2b_compress(ctx, 1); // final block flag = 1
 
-	// Store back in little endian
-	for (i = 0; i < 8; ++i)
-		store64(buffer + sizeof(ctx->h[i]) * i, ctx->h[i]);
-
-	// Copy first outlen bytes nto output buffer
-	memcpy(output, buffer, ctx->outlen);
+	// little endian convert and store
+	for (size_t i = 0; i < ctx->outlen; i++)
+	{
+		((uint8_t *)output)[i] = (ctx->h[i >> 3] >> (8 * (i & 7))) & 0xFF;
+	}
 	return 0;
 }
 
@@ -197,7 +193,7 @@ int blake2b(void *output, size_t outlen,
 						const void *input, size_t inlen,
 						const void *key, size_t keylen)
 {
-	blake2b_ctx ctx = {0};
+	blake2b_ctx ctx;
 
 	if (blake2b_init(&ctx, outlen, key, keylen) < 0)
 		return -1;

@@ -56,12 +56,11 @@ typedef struct blake2b_param
 
 typedef struct blake2b_ctx
 {
-	uint64_t h[8];									 // Chained state
-	uint64_t t[2];									 // total number of bytes
-	uint64_t f[2];									 // last block flag
-	uint8_t buf[BLAKE2B_BLOCKBYTES]; // input buffer
-	size_t buflen;									 // size of buffer
-	size_t outlen;									 // digest size
+	uint8_t b[BLAKE2B_BLOCKBYTES]; 					 // input buffer
+	uint64_t h[8];	 												 // chained state
+	uint64_t t[2];													 // total number of bytes
+	size_t c;																 // pointer for b[]
+	size_t outlen;													 // digest size
 } blake2b_ctx;
 
 int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key,
