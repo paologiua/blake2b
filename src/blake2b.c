@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define BUF_LENGTH 256
-
 void print_hexads(const void *hash)
 {
 	uint8_t *ptr = (uint8_t *)hash;
@@ -14,22 +12,6 @@ void print_hexads(const void *hash)
 	while (*ptr)
 		printf("%02x", *ptr++);
 }
-
-/*
-char *hex_to_string(const uint8_t *hash) {
-	size_t hashlen = strlen((char *)hash);
-
-	if (hashlen <= 0) return NULL;
-
-	char *str = (char *)malloc(2 * hashlen + 1);
-
-	for (char *p = str; *hash; p+=2) {
-		sprintf(p, "%02x", *hash++);
-	}
-
-	return str;
-}
- */
 
 int main(int argc, char *argv[])
 {
