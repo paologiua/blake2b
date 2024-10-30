@@ -107,11 +107,10 @@ int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key, size_t keylen
 	memset(P.salt, 0, sizeof(P.salt));
 	memset(P.personal, 0, sizeof(P.personal));
 
-	const uint8_t *p = (const uint8_t *)(&P);
 	for (size_t i = 0; i < 8; i++)
 		ctx->h[i] = blake2b_iv[i];
 	for (size_t i = 0; i < 8; i++)
-		ctx->h[i] ^= load64(p + sizeof(ctx->h[i]) * i);
+		ctx->h[i] ^= load64((const uint8_t *)(&P) + sizeof(ctx->h[i]) * i);
 
 	if (keylen > 0)
 	{

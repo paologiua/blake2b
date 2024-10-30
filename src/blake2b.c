@@ -7,7 +7,7 @@
 
 void print_hexads(const void *hash)
 {
-	uint8_t *ptr = (uint8_t *)hash;
+	const uint8_t *ptr = (const uint8_t *)hash;
 
 	while (*ptr)
 		printf("%02x", *ptr++);
