@@ -30,9 +30,9 @@ uint64_t load64(const void *src)
 #else
 	const uint8_t *p = (const uint8_t *)src;
 	return ((uint64_t)(p[0]) << 0) | ((uint64_t)(p[1]) << 8) |
-				 ((uint64_t)(p[2]) << 16) | ((uint64_t)(p[3]) << 24) |
-				 ((uint64_t)(p[4]) << 32) | ((uint64_t)(p[5]) << 40) |
-				 ((uint64_t)(p[6]) << 48) | ((uint64_t)(p[7]) << 56);
+		   ((uint64_t)(p[2]) << 16) | ((uint64_t)(p[3]) << 24) |
+		   ((uint64_t)(p[4]) << 32) | ((uint64_t)(p[5]) << 40) |
+		   ((uint64_t)(p[6]) << 48) | ((uint64_t)(p[7]) << 56);
 #endif
 }
 
@@ -73,13 +73,13 @@ void store32(void *dst, uint32_t w)
 }
 
 /**
- * @brief      increments the blake2b state counter
+ * @brief      increments the blake2b context counter
  *
- * @param      S     blake2b_state instance
+ * @param      ctx   blake2b_ctx instance
  * @param[in]  inc   The increment
  */
-void blake2b_increment_counter(blake2b_state *S, const uint64_t inc)
+void blake2b_increment_counter(blake2b_ctx *ctx, const uint64_t inc)
 {
-	S->t[0] += inc;
-	S->t[1] += (S->t[0] < inc);
+	ctx->t[0] += inc;
+	ctx->t[1] += (ctx->t[0] < inc);
 }

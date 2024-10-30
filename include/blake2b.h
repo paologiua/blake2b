@@ -7,7 +7,7 @@
 /**
  * The BLAKE2b initialization vectors
  */
-static const uint64_t blake2b_IV[8] = {
+static const uint64_t blake2b_iv[8] = {
 		0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b,
 		0xa54ff53a5f1d36f1, 0x510e527fade682d1, 0x9b05688c2b3e6c1f,
 		0x1f83d9abfb41bd6b, 0x5be0cd19137e2179};
@@ -27,8 +27,7 @@ static const uint8_t blake2b_sigma[12][16] = {
 		{6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5},
 		{10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0},
 		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-		{14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3}
-};
+		{14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3}};
 
 enum blake2b_constant
 {
@@ -54,7 +53,7 @@ typedef struct blake2b_param
 	uint8_t personal[BLAKE2B_PERSONALBYTES]; /* 64 */
 } blake2b_param;
 
-typedef struct blake2b_state
+typedef struct blake2b_ctx
 {
 	uint64_t h[8];									 // Chained state
 	uint64_t t[2];									 // total number of bytes
@@ -62,12 +61,12 @@ typedef struct blake2b_state
 	uint8_t buf[BLAKE2B_BLOCKBYTES]; // input buffer
 	size_t buflen;									 // size of buffer
 	size_t outlen;									 // digest size
-} blake2b_state;
+} blake2b_ctx;
 
-int blake2b_init(blake2b_state *S, size_t outlen, const void *key,
+int blake2b_init(blake2b_ctx *ctx, size_t outlen, const void *key,
 								 size_t keylen);
-int blake2b_update(blake2b_state *S, const void *in, size_t inlen);
-int blake2b_final(blake2b_state *S, void *out, size_t outlen);
+int blake2b_update(blake2b_ctx *ctx, const void *in, size_t inlen);
+int blake2b_final(blake2b_ctx *ctx, void *out, size_t outlen);
 int blake2b(void *out, size_t outlen, const void *in, size_t inlen,
 						const void *key, size_t keylen);
 #endif

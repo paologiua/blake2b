@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "array": "c",
+        "string": "c",
+        "vector": "c",
+        "memory": "c",
+        "optional": "c",
+        "string_view": "c",
+        "system_error": "c",
+        "text_encoding": "c",
+        "variant": "c",
+        "compare": "c",
+        "cstdint": "c",
+        "format": "c"
+    }
+}
