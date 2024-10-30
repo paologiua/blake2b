@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 /**
- * @brief  The Mix function is called by the Compress function, and mixes two
+ * @brief  The mixing function is called by the compress function, and mixes two
  *         8-byte words from the message into the hash state
  *
  * @param   v           the work vector V
@@ -34,7 +34,7 @@ static void G(uint64_t v[16], int a, int b, int c, int d, int64_t x, int64_t y)
  *             of the input message and mixes it into the ongoing state array
  *
  * @param      ctx    blake2b_ctx instance
- * @param      block  The input block
+ * @param      last   Indicates if this is the last call to the function
  */
 static void blake2b_compress(blake2b_ctx *ctx, int last)
 {
@@ -154,11 +154,10 @@ int blake2b_update(blake2b_ctx *ctx, const void *input, size_t inlen)
  *
  * @param      ctx      blake2b context instance
  * @param[in]  output  The hash output
- * @param[in]  outlen  The hash length
  *
  * @return     status code
  */
-int blake2b_final(blake2b_ctx *ctx, void *output, size_t outlen)
+int blake2b_final(blake2b_ctx *ctx, void *output)
 {
 	ctx->t[0] += ctx->c;		// mark last block offset
 	if (ctx->t[0] < ctx->c) // carry overflow
@@ -198,7 +197,7 @@ int blake2b(void *output, size_t outlen,
 		return -1;
 	if (blake2b_update(&ctx, input, inlen) < 0)
 		return -1;
-	if (blake2b_final(&ctx, output, outlen) < 0)
+	if (blake2b_final(&ctx, output) < 0)
 		return -1;
 
 	return 0;
