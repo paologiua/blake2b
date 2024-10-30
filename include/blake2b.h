@@ -8,9 +8,10 @@
  * The BLAKE2b initialization vectors
  */
 static const uint64_t blake2b_iv[8] = {
-		0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b,
-		0xa54ff53a5f1d36f1, 0x510e527fade682d1, 0x9b05688c2b3e6c1f,
-		0x1f83d9abfb41bd6b, 0x5be0cd19137e2179};
+		0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
+		0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
+		0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
+		0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179};
 
 /**
  * Table of permutations
