@@ -19,7 +19,7 @@ uint64_t rotr64(const uint64_t w, const unsigned c)
  *
  * @param[in]  src   The source
  *
- * @return     { description_of_the_return_value }
+ * @return     The 64 bytes loaded
  */
 uint64_t load64(const void *src)
 {
@@ -39,7 +39,7 @@ uint64_t load64(const void *src)
 /**
  * @brief      Stores w into dst
  *
- * @param      dst   The destination
+ * @param[out] dst   The destination
  * @param[in]  w     word to be stored
  */
 void store64(void *dst, uint64_t w)
@@ -59,6 +59,12 @@ void store64(void *dst, uint64_t w)
 #endif
 }
 
+/**
+ * @brief      Stores w into dst
+ *
+ * @param[out] dst   The destination
+ * @param[in]  w     word to be stored
+ */
 void store32(void *dst, uint32_t w)
 {
 #if defined(NATIVE_LITTLE_ENDIAN)
@@ -72,14 +78,3 @@ void store32(void *dst, uint32_t w)
 #endif
 }
 
-/**
- * @brief      increments the blake2b context counter
- *
- * @param      ctx   blake2b_ctx instance
- * @param[in]  inc   The increment
- */
-void blake2b_increment_counter(blake2b_ctx *ctx, const uint64_t inc)
-{
-	ctx->t[0] += inc;
-	ctx->t[1] += (ctx->t[0] < inc);
-}

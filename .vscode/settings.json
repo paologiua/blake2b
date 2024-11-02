@@ -12,6 +12,7 @@
         "compare": "c",
         "cstdint": "c",
         "format": "c",
-        "random": "c"
+        "random": "c",
+        "blake2b.h": "c"
     }
 }
