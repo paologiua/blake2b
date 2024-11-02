@@ -13,6 +13,7 @@
         "cstdint": "c",
         "format": "c",
         "random": "c",
-        "blake2b.h": "c"
+        "blake2b.h": "c",
+        "string.h": "c"
     }
 }

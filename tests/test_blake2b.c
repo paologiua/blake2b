@@ -16,6 +16,10 @@ static const struct
 int test_hex(const char *hexstr, const uint8_t *hash, size_t hashlen)
 {
 	size_t hexstrlen = strlen(hexstr);
+
+	if (hashlen != hexstrlen / 2) 
+		return 0;
+
 	const uint8_t *ptr = (const uint8_t *)hash;
 	char curr_hexstr[2];
 
@@ -32,7 +36,9 @@ int test_hex(const char *hexstr, const uint8_t *hash, size_t hashlen)
 	return 1;
 }
 
-// Function to run the tests
+/**
+ * @brief      Function to run the tests
+ */
 void test_blake2b()
 {
 	int num_tests = sizeof(TEST_CASES) / sizeof(TEST_CASES[0]);
